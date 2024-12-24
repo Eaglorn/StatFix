@@ -22,6 +22,7 @@ class ComputerSerializer implements JsonSerializer<Computer> {
 		for (Operation operation : computer.getOperations()) {
 			JsonObject operationObject = new JsonObject();
 			operationObject.addProperty("date", formatter.format(operation.getDate()));
+			operationObject.addProperty("version", operation.getVersion());
 			operationObject.addProperty("fixs", String.join(", ", operation.getFixs()));
 			operationsArray.add(operationObject);
 		}

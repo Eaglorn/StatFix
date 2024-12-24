@@ -11,19 +11,15 @@ public class StatFix {
 		 *
 		 * if (arg.equals("-client")) { runClient(args[1]); }
 		 */
-		long startTime = System.currentTimeMillis();
-		runServer("c:/statfix/info/", "c:/statfix/");
-		long endTime = System.currentTimeMillis();
-		long duration = endTime - startTime;
-		System.out.println("Время выполнения: " + duration + " миллисекунд");
+		runServer("c:/statfix/info/", "c:/statfix/", "24.12.4.1");
 	}
 
 	/*
 	 * private static void runClient(String importPath) { client = new Client(); }
 	 */
 
-	private static void runServer(String pathImport, String pathExport) {
-		server = new Server(pathImport, pathExport);
+	private static void runServer(String pathImport, String pathExport, String version) {
+		server = new Server(pathImport, pathExport, "24.12.4.1");
 		server.run();
 	}
 }

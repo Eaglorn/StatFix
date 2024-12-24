@@ -14,15 +14,18 @@ import lombok.extern.slf4j.Slf4j;
 public class Server {
 	private String pathImport;
 	private String pathExport;
-	private Data data = new Data();
+	private String version;
+	private Data data;
 
-	public Server(String pathImport, String pathExport) {
+	public Server(String pathImport, String pathExport, String version) {
 		this.pathImport = pathImport;
 		this.pathExport = pathExport;
+		this.version = version;
 	}
 
 	public void run() {
-		data = Data.load(pathExport);
+		data = Data.load(pathExport, version);
+		boolean isChange = false;
 		if (data != null) {
 			File folder = new File(pathImport);
 			File[] files = folder.listFiles();
@@ -40,8 +43,11 @@ public class Server {
 						data.initComputer(file.getName(), fileContent);
 					}
 				}
+				isChange = true;
 			}
-			data.save(pathExport);
+			if (isChange) {
+				data.save(pathExport);
+			}
 		}
 	}
 }

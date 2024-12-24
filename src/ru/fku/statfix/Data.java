@@ -25,54 +25,50 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class Data {
-	public static boolean isDifferenceMoreThanThreeMonths(LocalDateTime date1, LocalDateTime date2, Integer month) {
+	public static boolean isDifferenceMoreThanMonths(LocalDateTime date1, LocalDateTime date2, Integer month) {
 		long monthsBetween = Math.abs(ChronoUnit.MONTHS.between(date1, date2));
 		return monthsBetween > month;
 	}
 
-	public static Data load(String pathExport) {
+	public static Data load(String pathExport, String version) {
 		if (Files.exists(Paths.get(pathExport + "info.json"))) {
+			Gson gson = new GsonBuilder()
+					.registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter("yyyy-MM-dd HH:mm:ss")).create();
+			Data data = null;
 			try {
-				long startTime = System.currentTimeMillis();
-				Gson gson = new GsonBuilder().setDateFormat("dd-MM-yyyy HH:mm:ss").create();
-				Data data = gson.fromJson(new JsonReader(new FileReader(pathExport + "info.json")), Data.class);
-				long endTime = System.currentTimeMillis();
-				long duration = endTime - startTime;
-				System.out.println("Загрузка: " + duration + " миллисекунд");
-
-				LocalDateTime date1 = LocalDateTime.now();
-
-				for (Computer computer : data.getComputers()) {
-					boolean isDelete = false;
-					LocalDateTime date2 = computer.getDateChange();
-					if (isDifferenceMoreThanThreeMonths(date1, date2, 3)) {
-						isDelete = true;
-					}
-
-					if (!isDelete) {
-						for (Operation operation : computer.getOperations()) {
-							date2 = operation.getDate();
-							if (isDifferenceMoreThanThreeMonths(date1, date2, 1)) {
-								computer.getOperations().remove(operation);
-							}
-						}
-						if (computer.getOperations().size() == 0) {
-							isDelete = true;
-						}
-					}
-
-					if (isDelete) {
-						data.computers.remove(computer);
-					}
-				}
-
-				return data;
+				data = gson.fromJson(new JsonReader(new FileReader(pathExport + "info.json")), Data.class);
 			} catch (JsonIOException | JsonSyntaxException | FileNotFoundException e) {
 				StringWriter stack = new StringWriter();
 				e.printStackTrace(new PrintWriter(stack));
 				log.error(stack.toString());
 			}
-			return null;
+
+			LocalDateTime date1 = LocalDateTime.now();
+
+			for (Computer computer : data.getComputers()) {
+				boolean isDelete = false;
+				LocalDateTime date2 = computer.getDateChange();
+				if (isDifferenceMoreThanMonths(date1, date2, 3)) {
+					isDelete = true;
+				}
+
+				if (!isDelete) {
+					for (Operation operation : computer.getOperations()) {
+						date2 = operation.getDate();
+						if (isDifferenceMoreThanMonths(date1, date2, 1)) {
+							computer.getOperations().remove(operation);
+						}
+					}
+					if (computer.getOperations().size() == 0) {
+						isDelete = true;
+					}
+				}
+
+				if (isDelete) {
+					data.computers.remove(computer);
+				}
+			}
+			return data;
 		} else {
 			return new Data();
 		}
@@ -106,15 +102,6 @@ public class Data {
 		Computer computer = findComputerByName(name);
 
 		if (computer != null) {
-			if (listFixs.size() != 0) {
-				Operation operation = new Operation(LocalDateTime.now(), version);
-				for (String fix : listFixs) {
-					operation.getFixs().add(fix);
-				}
-				operation.sort();
-				computer.getOperations().add(operation);
-			}
-
 			if (!version.equals(computer.getVersion())) {
 				computer.setVersion(version);
 			}
@@ -123,7 +110,7 @@ public class Data {
 			ArrayList<String> fixs = new ArrayList<>();
 
 			for (Operation operation : operations) {
-				if (operation.getVersion().equals(version)) {
+				if (version.equals(operation.getVersion())) {
 					for (String fix : operation.getFixs()) {
 						fixs.add(fix);
 					}
@@ -157,9 +144,9 @@ public class Data {
 	}
 
 	public void save(String pathExport) {
-		long startTime = System.currentTimeMillis();
 		try (FileWriter file = new FileWriter(pathExport + "info.json")) {
-			Gson gson = new GsonBuilder().setDateFormat("dd-MM-yyyy HH:mm:ss").create();
+			Gson gson = new GsonBuilder()
+					.registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter("dd-MM-yyyy HH:mm:ss")).create();
 			file.write(gson.toJson(this, Data.class));
 			file.flush();
 		} catch (IOException e) {
@@ -177,8 +164,5 @@ public class Data {
 			e.printStackTrace(new PrintWriter(stack));
 			log.error(stack.toString());
 		}
-		long endTime = System.currentTimeMillis();
-		long duration = endTime - startTime;
-		System.out.println("Сохранение: " + duration + " миллисекунд");
 	}
 }
