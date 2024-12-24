@@ -39,7 +39,6 @@ public class Data {
 				long endTime = System.currentTimeMillis();
 				long duration = endTime - startTime;
 				System.out.println("Загрузка: " + duration + " миллисекунд");
-				System.out.println(data.computers.size());
 
 				LocalDateTime date1 = LocalDateTime.now();
 
