@@ -8,6 +8,8 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -24,6 +26,13 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class Data {
+	private @Getter ArrayList<Computer> computers = new ArrayList<>();
+	
+	public static boolean isDifferenceMoreThanThreeMonths(LocalDateTime date1, LocalDateTime date2, Integer month) {
+        long monthsBetween = Math.abs(ChronoUnit.MONTHS.between(date1, date2));
+        return monthsBetween > month;
+    }
+	
 	public static Data load(String pathExport) {
 		if (Files.exists(Paths.get(pathExport + "info.json"))) {
 			try {
@@ -33,6 +42,32 @@ public class Data {
 				long endTime = System.currentTimeMillis();
 				long duration = endTime - startTime;
 				System.out.println("Загрузка: " + duration + " миллисекунд");
+				System.out.println(data.computers.size());
+				
+				LocalDateTime date1 = LocalDateTime.now();
+				
+				for (Computer computer: data.getComputers()) {
+					boolean isDelete = false;
+			        LocalDateTime date2 = computer.getDateChange();
+			        if(isDifferenceMoreThanThreeMonths(date1, date2, 3)) {
+			        	isDelete = true;
+			        }
+			        
+			        if(!isDelete) {
+				        for(Operation operation: computer.getOperations()) {
+							date2 = operation.getDate();
+					        if(isDifferenceMoreThanThreeMonths(date1, date2, 1)) {
+					        	computer.getOperations().remove(operation);
+					        }
+						}
+				        if(computer.getOperations().size() == 0) {
+				        	isDelete = true;
+				        }
+			        }
+			        
+			        if (isDelete) data.computers.remove(computer);
+				}
+				
 				return data;
 			} catch (JsonIOException | JsonSyntaxException | FileNotFoundException e) {
 				StringWriter stack = new StringWriter();
@@ -44,8 +79,6 @@ public class Data {
 			return new Data();
 		}
 	}
-
-	private @Getter ArrayList<Computer> computers = new ArrayList<>();
 
 	public Computer findComputerByName(String name) {
 		for (Computer computer : computers) {
@@ -61,6 +94,7 @@ public class Data {
 		ArrayList<String> listParts = new ArrayList<>(Arrays.asList(parts));
 		String version = listParts.get(0);
 		ArrayList<String> listFixs = new ArrayList<>();
+		
 		if (!listParts.isEmpty()) {
 			for (String part : listParts) {
 				if (!part.equals(version)) {
@@ -68,53 +102,56 @@ public class Data {
 				}
 			}
 		}
+		
 		Computer computer = findComputerByName(name);
+		
 		if (computer != null) {
-			if (!version.equals(computer.getVersion())) {
-				computer.getOperations().clear();
-				if (listFixs.size() != 0) {
-					Operation operation = new Operation(new Date());
-					for (String fix : listFixs) {
-						operation.getFixs().add(fix);
-					}
-					operation.sort();
-					computer.getOperations().add(operation);
+			if (listFixs.size() != 0) {
+				Operation operation = new Operation(LocalDateTime.now(), version);
+				for (String fix : listFixs) {
+					operation.getFixs().add(fix);
 				}
-			} else {
-				ArrayList<Operation> operations = computer.getOperations();
-				ArrayList<String> fixs = new ArrayList<>();
+				operation.sort();
+				computer.getOperations().add(operation);
+			}
+			
+			if (!version.equals(computer.getVersion())) {
+				computer.setVersion(version);
+			} 
+			
+			ArrayList<Operation> operations = computer.getOperations();
+			ArrayList<String> fixs = new ArrayList<>();
 
-				for (Operation operation : operations) {
+			for (Operation operation : operations) {
+				if(operation.getVersion().equals(version)) {
 					for (String fix : operation.getFixs()) {
 						fixs.add(fix);
 					}
 				}
+			}
 
-				if (listFixs.size() != 0) {
-					Operation operation = new Operation(new Date());
-					for (String fix : listFixs) {
-						if (!fixs.contains(fix)) {
-							operation.getFixs().add(fix);
-						}
+			if (listFixs.size() != 0) {
+				Operation operation = new Operation(LocalDateTime.now(), computer.getVersion());
+				for (String fix : listFixs) {
+					if (!fixs.contains(fix)) {
+						operation.getFixs().add(fix);
 					}
-					if (operation.getFixs().size() != 0) {
-						operation.sort();
-						computer.getOperations().add(operation);
-					}
+				}
+				if (operation.getFixs().size() != 0) {
+					operation.sort();
+					computer.getOperations().add(operation);
 				}
 			}
 
 			computer.dateUpdate();
 		} else {
 			if (listFixs.size() != 0) {
-				Operation operation = new Operation(new Date());
+				Operation operation = new Operation(LocalDateTime.now(), version);
 				for (String fix : listFixs) {
 					operation.getFixs().add(fix);
 				}
 				operation.sort();
 				computers.add(new Computer(name, version, operation));
-			} else {
-				computers.add(new Computer(name, version));
 			}
 
 		}

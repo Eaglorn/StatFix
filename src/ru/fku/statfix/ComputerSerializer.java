@@ -1,7 +1,7 @@
 package ru.fku.statfix;
 
 import java.lang.reflect.Type;
-import java.text.SimpleDateFormat;
+import java.time.format.DateTimeFormatter;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -16,12 +16,12 @@ class ComputerSerializer implements JsonSerializer<Computer> {
 		jsonObject.addProperty("name", computer.getName());
 		jsonObject.addProperty("ekp", computer.getEkp());
 		jsonObject.addProperty("version", computer.getVersion());
-		SimpleDateFormat formater = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
-		jsonObject.addProperty("dateChange", formater.format(computer.getDateChange()));
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
+		jsonObject.addProperty("dateChange", formatter.format(computer.getDateChange()));
 		JsonArray operationsArray = new JsonArray();
 		for (Operation operation : computer.getOperations()) {
 			JsonObject operationObject = new JsonObject();
-			operationObject.addProperty("date", formater.format(operation.getDate()));
+			operationObject.addProperty("date", formatter.format(operation.getDate()));
 			operationObject.addProperty("fixs", String.join(", ", operation.getFixs()));
 			operationsArray.add(operationObject);
 		}
