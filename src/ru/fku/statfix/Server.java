@@ -23,12 +23,13 @@ public class Server {
 
 	public void run() {
 		data = Data.load(pathExport);
-		if(data != null) {
+		if (data != null) {
 			File folder = new File(pathImport);
 			File[] files = folder.listFiles();
-			for (File file : files) {
-			    if (file.isFile()) {
-			    	String fileContent = "";
+			if (files != null) {
+				for (File file : files) {
+					if (file.isFile()) {
+						String fileContent = "";
 						try {
 							fileContent = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
 						} catch (IOException e) {
@@ -36,8 +37,9 @@ public class Server {
 							e.printStackTrace(new PrintWriter(stack));
 							log.error(stack.toString());
 						}
-			        data.initComputer(file.getName(), fileContent);
-			    }
+						data.initComputer(file.getName(), fileContent);
+					}
+				}
 			}
 			data.save(pathExport);
 		}
