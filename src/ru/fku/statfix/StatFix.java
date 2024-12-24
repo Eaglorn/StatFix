@@ -8,7 +8,7 @@ public class StatFix {
 		/*
 		 * String arg = args[0]; if (arg.equals("-server")) { runServer(args[1],
 		 * args[2]); }
-		 * 
+		 *
 		 * if (arg.equals("-client")) { runClient(args[1]); }
 		 */
 		long startTime = System.currentTimeMillis();
