@@ -17,7 +17,12 @@ class ComputerSerializer implements JsonSerializer<Computer> {
         SimpleDateFormat formater = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
         jsonObject.addProperty("dateChange", formater.format(computer.getDateChange()));
         
-        jsonObject.addProperty("fixs", String.join(", ", computer.getFixs()));
+        for (Operation operation : computer.getOperations()) {
+            JsonObject operationObject = new JsonObject();
+            operationObject.addProperty("date", operation.getDate().toString());
+            operationObject.addProperty("fixes", String.join(", ", operation.getFixs())); // Фиксы на одной строке
+            jsonObject.add("operations", operationObject);
+        }
         
         return jsonObject;
     }

@@ -13,7 +13,11 @@ public class StatFix {
 		if (arg.equals("-client")) {
 			runClient(args[1]);
 		}*/
-		runServer("c:/statfix/info/", "c:/statfix/info.json");
+		long startTime = System.currentTimeMillis();
+		runServer("c:/statfix/info/", "c:/statfix/");
+		long endTime = System.currentTimeMillis(); // Конец измерения времени
+        long duration = endTime - startTime;
+        System.out.println("Время выполнения: " + duration + " миллисекунд");
 	}
 
 	/*private static void runClient(String importPath) {
